@@ -85,7 +85,10 @@ class Blockchain {
                                 reject(error);
                             });
                     } else {
-                        block.hash = SHA256(JSON.stringify(block)).toString();
+                        console.log("block SHA256 is :",SHA256(JSON.stringify(block)).toString());
+                        // block.nonce = 0;
+                        block.hash = self.calculateHashForBlock(block);
+                        console.log("block.hash is :",block.hash);
                         self.bd.addLevelDBData(height, JSON.stringify(block));
                         resolve(true);
                     }
@@ -120,9 +123,9 @@ class Blockchain {
         return this.getBlock(height)
             .then(block => {
                 let blockHash = block.hash;
-                // block.hash = "";
+                block.hash = "";
                 let validBlockHash = this.calculateHashForBlock(block);
-                // block.hash = blockHash;
+                block.hash = blockHash;
                 if (validBlockHash === blockHash) {
                     return Promise.resolve({isValidBlock: true, block: block});
                 } else {
@@ -189,7 +192,7 @@ class Blockchain {
         return new Promise(function (resolve, reject) {
             self.getBlockHeight()
                 .then(height => {
-                    for (let i = 0; i < height; i++) {
+                    for (let i = 0 ; i < height; i++) {
                         self.getBlock(i)
                             .then(block => self.validateBlock(block.height))
                             .then(({isValidBlock, block}) => {

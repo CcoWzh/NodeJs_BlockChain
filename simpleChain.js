@@ -14,7 +14,7 @@ setTimeout(function () {
 /******************************************
  ** Function for Create Tests Blocks   ****
  ******************************************/
-//
+
 // (function theLoop(i) {
 //     setTimeout(function () {
 //         let blockTest = new Block.Block("Test Block - " + (i + 1));
@@ -47,9 +47,9 @@ setTimeout(function () {
 
 
 //Be careful this only will work if `getBlock` method in Blockchain.js file return a Promise
-myBlockChain.getBlock(0).then((block) => {
-	console.log(JSON.stringify(block));
-}).catch((err) => { console.log(err);});
+// myBlockChain.getBlock(0).then((block) => {
+// 	console.log(JSON.stringify(block));
+// }).catch((err) => { console.log(err);});
 
 
 /***********************************************
@@ -58,13 +58,13 @@ myBlockChain.getBlock(0).then((block) => {
 
 
 // Be careful this only will work if `validateBlock` method in Blockchain.js file return a Promise
-myBlockChain.validateBlock(0)
-	.then((valid) => {
-	console.log(valid);
-})
-.catch((error) => {
-	console.log(error);
-})
+// myBlockChain.validateBlock(0)
+// 	.then((valid) => {
+// 	console.log(valid);
+// })
+// .catch((error) => {
+// 	console.log(error);
+// })
 
 
 /** Tampering a Block this is only for the purpose of testing the validation methods */
@@ -104,16 +104,16 @@ myBlockChain.validateBlock(0)
 
 
 // Be careful this only will work if `validateChain` method in Blockchain.js file return a Promise
-// myBlockChain.validateChain().then((errorLog) => {
-// 	if(errorLog.length > 0){
-// 		console.log("The chain is not valid:");
-// 		errorLog.forEach(error => {
-// 			console.log(error);
-// 		});
-// 	} else {
-// 		console.log("No errors found, The chain is Valid!");
-// 	}
-// })
-// .catch((error) => {
-// 	console.log(error);
-// })
+myBlockChain.validateChain().then((errorLog) => {
+	if(errorLog.length > 0){
+		console.log("The chain is not valid:");
+		errorLog.forEach(error => {
+			console.log(error);
+		});
+	} else {
+		console.log("No errors found, The chain is Valid!");
+	}
+})
+.catch((error) => {
+	console.log(error);
+})
