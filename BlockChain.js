@@ -6,6 +6,7 @@ const SHA256 = require('crypto-js/sha256');
 const LevelSandbox = require('./LevelSandbox.js');
 const Block = require('./Block.js');
 const CryptoJS = require('crypto-js');
+const async = require('async');
 
 class Blockchain {
 
@@ -70,13 +71,13 @@ class Blockchain {
                                 block.previousBlockHash = preBlock.hash;
                                 let nonce = 0;
                                 let nextHash = '';
-                                while(!self.isValidHashDifficulty(nextHash)) {
+                                while (!self.isValidHashDifficulty(nextHash)) {
                                     nonce = nonce + 1;
-                                    nextHash = self.calculateHash(block.height,block.previousBlockHash, block.time, block.body, nonce);
+                                    nextHash = self.calculateHash(block.height, block.previousBlockHash, block.time, block.body, nonce);
                                 }
                                 block.hash = nextHash;
                                 block.nonce = nonce;
-                                console.log(block.hash);
+                                console.log("block.hash is : ", block.hash);
                                 self.bd.addLevelDBData(height, JSON.stringify(block));
                                 resolve(true);
                             })
@@ -85,10 +86,10 @@ class Blockchain {
                                 reject(error);
                             });
                     } else {
-                        console.log("block SHA256 is :",SHA256(JSON.stringify(block)).toString());
+                        console.log("block SHA256 is :", SHA256(JSON.stringify(block)).toString());
                         // block.nonce = 0;
                         block.hash = self.calculateHashForBlock(block);
-                        console.log("block.hash is :",block.hash);
+                        console.log("block.hash is :", block.hash);
                         self.bd.addLevelDBData(height, JSON.stringify(block));
                         resolve(true);
                     }
@@ -134,17 +135,18 @@ class Blockchain {
                 }
             })
     }
+
     // 根据区块的索引确认区块是否有效,法二：
-    validateBlock_2(height){
+    validateBlock_2(height) {
         return this.getBlock(height).then(
             block => {
-                let preheight = block.height-1;
+                let preheight = block.height - 1;
                 this.getBlock(preheight).then(
-                    previousBlock =>{
-                        if(this.isValidNewBlock(block,previousBlock)){
+                    previousBlock => {
+                        if (this.isValidNewBlock(block, previousBlock)) {
                             console.log("YES");
                             return Promise.resolve({isValidBlock: true, block: block})
-                        }else {
+                        } else {
                             console.log("NO");
                             return Promise.reject({isValidBlock: false, block: block})
                         }
@@ -155,29 +157,30 @@ class Blockchain {
     }
 
     //返回区块的哈希
-    calculateHashForBlock (block) {
+    calculateHashForBlock(block) {
         return this.calculateHash(block.height, block.previousBlockHash, block.time, block.body, block.nonce)
     }
+
     // 拼接一串字符，返回其哈希
-    calculateHash (index, previousHash, timestamp, data, nonce) {
+    calculateHash(index, previousHash, timestamp, data, nonce) {
         return CryptoJS.SHA256(index + previousHash + timestamp + data + nonce).toString()
     }
 
     //根据区块的前后对比确认新的区块是否有效
-    isValidNewBlock (newBlock, previousBlock) {
+    isValidNewBlock(newBlock, previousBlock) {
         const blockHash = this.calculateHashForBlock(newBlock);
 
         if (previousBlock.height + 1 !== newBlock.height) {
-            logger.log('❌  new block has invalid index')
+            console.log('❌  new block has invalid index ', newBlock.height)
             return false
         } else if (previousBlock.hash !== newBlock.previousBlockHash) {
-            logger.log('❌  new block has invalid previous hash')
+            console.log('❌  new block has invalid previous hash ', newBlock.height)
             return false
         } else if (blockHash !== newBlock.hash) {
-            logger.log(`❌  invalid hash`)
+            console.log(`❌  invalid hash `, newBlock.height)
             return false
         } else if (!this.isValidHashDifficulty(this.calculateHashForBlock(newBlock))) {
-            logger.log(`❌  invalid hash does not meet difficulty requirements: ${this.calculateHashForBlock(newBlock)}`);
+            console.log(`❌  invalid hash does not meet difficulty requirements: ${this.calculateHashForBlock(newBlock)}`);
             return false;
         }
         return true
@@ -187,21 +190,21 @@ class Blockchain {
     validateChain() {
         // Add your code here
         let errorlog = [];
-        let previousHash = '';
         let self = this;
         return new Promise(function (resolve, reject) {
             self.getBlockHeight()
                 .then(height => {
-                    for (let i = 0 ; i < height; i++) {
+                    for (let i = 1; i < height; i++) {
                         self.getBlock(i)
-                            .then(block => self.validateBlock(block.height))
-                            .then(({isValidBlock, block}) => {
-                                if (!isValidBlock) errorlog.push(i);
-                                if (block.previousBlockHash !== previousHash) errorlog.push(i);
-                                previousHash = block.hash;
-                                resolve(errorlog);
-                            })
+                            .then(now_block => {
+                                self.getBlock(now_block.height - 1).then(previousBlock => {
+                                    if(!self.isValidNewBlock(now_block, previousBlock)) errorlog.push(i)
+                                })
+                            });
                     }
+                    setTimeout(function () {
+                        resolve(errorlog)
+                    }, 1 * 1000);
                 })
         })
 
@@ -209,7 +212,7 @@ class Blockchain {
 
     //判断是否是有效的哈希困难值
     isValidHashDifficulty(hash) {
-        for (var i = 0, b = hash.length; i < b; i ++) {
+        for (var i = 0, b = hash.length; i < b; i++) {
             if (hash[i] !== '0') {
                 break;
             }
@@ -221,10 +224,13 @@ class Blockchain {
     // This method is for testing purpose
     _modifyBlock(height, block) {
         let self = this;
-        return new Promise( (resolve, reject) => {
+        return new Promise((resolve, reject) => {
             self.bd.addLevelDBData(height, JSON.stringify(block).toString()).then((blockModified) => {
                 resolve(blockModified);
-            }).catch((err) => { console.log(err); reject(err)});
+            }).catch((err) => {
+                console.log(err);
+                reject(err)
+            });
         });
     }
 

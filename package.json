@@ -4,12 +4,16 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "ava"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "async": "^3.1.0",
     "crypto-js": "^3.1.9-1",
     "level": "^4.0.0"
+  },
+  "devDependencies": {
+    "ava": "^2.4.0"
   }
 }
